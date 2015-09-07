@@ -1,0 +1,20 @@
+{
+    "name": "zhibaihe/wechat",
+    "description": "微信公众平台 PHP SDK (非官方)",
+    "keywords": ["wechat", "sdk", "laravel"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "DUAN Zhiyan",
+            "email": "zhiyan@zhibaihe.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Zhibaihe\\WeChat\\": "src/"
+        }
+    },
+    "require": {
+        "illuminate/support": "~5"
+    }
+}
