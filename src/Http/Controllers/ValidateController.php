@@ -41,7 +41,7 @@ class ValidateController extends Controller
      */
     protected function echostr($echostr, $signature, $timestamp, $nonce)
     {
-        $valid = $this->wechat->validateSignature($signature, $timestamp, $nonce);
+        $valid = $this->wechat->validate($signature, $timestamp, $nonce);
 
         if (!$valid)
         {

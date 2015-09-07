@@ -19,10 +19,11 @@ class WeChatServiceProvider extends ServiceProvider
     {
         $this->app->singleton('Zhibaihe\WeChat\WeChatServiceInterface', function(){
             $wechat = new WeChatService(
+                config('zhibaihe.wechat.mode'),
                 config('zhibaihe.wechat.token'),
                 config('zhibaihe.wechat.AESKey'),
                 config('zhibaihe.wechat.app_id'),
-                config('zhibaihe.wechat.mode')
+                config('zhibaihe.wechat.app_secret')
             );
             return $wechat;
         });

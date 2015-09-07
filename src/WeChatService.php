@@ -9,23 +9,27 @@ class WeChatService implements WeChatServiceInterface
 	protected $token;
 	protected $encodingAesKey;
 	protected $appId;
+	protected $appSecret;
     protected $key;
     protected $mode;
 
 	/**
 	 * 构造函数
 	 *
+	 * @param  string $mode 消息加解密方式 naked | compatible | safe
 	 * @param  string $token 公众平台上，开发者设置的 token
 	 * @param  string $encodingAesKey 公众平台上，开发者设置的EncodingAESKey
 	 * @param  string $appId 公众平台的 appId
-	 * @param  string $mode 消息加解密方式 naked | compatible | safe
+	 * @param  string $appSecret 公众平台的 app_secret
+	 *
 	 * @throws WeChatException
 	 */
-	public function __construct($token, $encodingAesKey, $appId, $mode)
+	public function __construct($mode, $token, $encodingAesKey, $appId, $appSecret)
 	{
 		$this->token = $token;
 		$this->encodingAesKey = $encodingAesKey;
 		$this->appId = $appId;
+		$this->appSecret = $appSecret;
 		$this->mode = $mode;
 
 		if($this->mode == 'safe' && strlen($this->encodingAesKey) != 43) {
@@ -46,7 +50,7 @@ class WeChatService implements WeChatServiceInterface
      *
      * @return boolean 签名的有效性
      */
-    public function validateSignature($signature, $timestamp, $nonce)
+    public function validate($signature, $timestamp, $nonce)
     {
         $sign = $this->sign([$timestamp, $nonce]);
 
@@ -54,8 +58,9 @@ class WeChatService implements WeChatServiceInterface
     }
 
 	/**
-	 * 将公众平台回复用户的消息加密打包.
+	 * 将公众平台回复用户的消息进行打包.
 	 *
+	 * 安全模式将对消息执行加密和签名
 	 * 1. 对要发送的消息进行AES-CBC加密
 	 * 2. 生成安全签名
 	 * 3. 将消息密文和安全签名打包成xml格式
@@ -64,9 +69,9 @@ class WeChatService implements WeChatServiceInterface
 	 * @param string $timestamp 时间戳，可以自己生成，也可以用URL参数的timestamp
 	 * @param string $nonce 一次性随机串，可以自己生成，也可以用URL参数的nonce 当return返回0时有效
 	 *
-	 * @return string 加密后的可以直接回复用户的密文
+	 * @return string 可直接用于回复用户的 XML
 	 */
-	public function encryptMessage($reply, $timestamp, $nonce)
+	public function prepare($reply, $timestamp, $nonce)
 	{
         $replyMsg = $this->array2xml('xml', $reply);
 
@@ -90,8 +95,9 @@ class WeChatService implements WeChatServiceInterface
 	}
 
 	/**
-	 * 检验消息的真实性，并且获取解密后的明文.
+	 * 接收消息
 	 *
+	 * 安全模式下进行消息验证和解密
 	 * 1. 利用收到的密文生成安全签名，进行签名验证
 	 * 2. 若验证通过，则提取xml中的加密消息
 	 * 3. 对消息进行解密
@@ -101,9 +107,9 @@ class WeChatService implements WeChatServiceInterface
 	 * @param string $nonce 随机串，对应 URL 参数的 nonce
 	 * @param string $postData 密文，对应 POST 请求的 body
      *
-	 * @return string 解密后的原文(已将xml转化为PHP数组)
+	 * @return array 消息的 PHP 数组表示
 	 */
-	public function decryptMessage($msgSignature, $timestamp, $nonce, $postData)
+	public function receive($msgSignature, $timestamp, $nonce, $postData)
 	{
 		//提取密文
         $message = $this->xml2array($postData);
@@ -112,7 +118,6 @@ class WeChatService implements WeChatServiceInterface
         {
         	return $message;
         }
-        
 
         $signature = $this->sign([$timestamp, $nonce, $message['Encrypt']]);
 

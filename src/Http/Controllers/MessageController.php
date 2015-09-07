@@ -22,7 +22,7 @@ class MessageController extends Controller
         $timestamp = $request->get('timestamp');
         $nonce = $request->get('nonce');
 
-        $message = $this->wechat->decryptMessage($msg_signature, $timestamp, $nonce, $content);
+        $message = $this->wechat->receive($msg_signature, $timestamp, $nonce, $content);
 
         $reply = [
             'ToUserName'   => $message['FromUserName'],
@@ -32,28 +32,8 @@ class MessageController extends Controller
             'Content'      => $message['Content'],
         ];
 
-        $response = $this->wechat->encryptMessage($reply, $timestamp, $nonce);
+        $response = $this->wechat->prepare($reply, $timestamp, $nonce);
 
         return $response;
 	}
-
-	/**
-     * 微信 API endpoint 验证请求
-     * @param $echostr
-     * @param $signature
-     * @param $timestamp
-     * @param $nonce
-     * @return
-     */
-    protected function echostr($echostr, $signature, $timestamp, $nonce)
-    {
-        $valid = $this->wechat->validateSignature($signature, $timestamp, $nonce);
-
-        if (!$valid)
-        {
-            \App::abort(403);
-        }
-
-        return $echostr;
-    }
 }
