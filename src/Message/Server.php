@@ -83,8 +83,6 @@ class Server
 
         $response = $this->messager->prepare($reply, $timestamp, $nonce);
 
-        error_log($response);
-		
 		echo $response;
 	}
 

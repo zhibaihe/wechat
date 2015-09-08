@@ -50,10 +50,6 @@ class Pipeline
 			$type = "event.{$message['Event']}";
 		}
 
-		error_log(sprintf("processing $type, with lines: %s", json_encode($this->lines)));
-
-		error_log(count($this->lines[$type]));
-
 		if( ! array_key_exists($type, $this->lines))
 		{
 			return $message;
