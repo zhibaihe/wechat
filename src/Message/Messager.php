@@ -1,42 +1,66 @@
 <?php
 
-namespace Zhibaihe\WeChat;
+namespace Zhibaihe\WeChat\Message;
 
 use Exception;
+use Zhibaihe\WeChat\Utils\PKCS7Encoder;
 
-class WeChatService implements WeChatServiceInterface
+class Messager
 {
+	/**
+	 * 微信公众号 token
+	 * @var string
+	 */
 	protected $token;
-	protected $encodingAesKey;
-	protected $appId;
-	protected $appSecret;
+
+	/**
+	 * 安全模式下的加密密钥
+	 *
+	 * 可选。若为 `null`，则消息传递模式为明文模式，长度必须为 43 字符
+	 * @var string
+	 */
+	protected $AES_key;
+
+	/**
+	 * 微信公众号 app_id
+	 * @var string
+	 */
+	protected $app_id;
+
+	/**
+	 * 内部使用的加解密密钥
+	 * @var string
+	 */
     protected $key;
+
+    /**
+     * 消息加解密方式 
+	 * @var string naked | safe
+	 */
     protected $mode;
 
 	/**
 	 * 构造函数
 	 *
-	 * @param  string $mode 消息加解密方式 naked | compatible | safe
+	 * @param  string $app_id 公众平台的 app_id
 	 * @param  string $token 公众平台上，开发者设置的 token
-	 * @param  string $encodingAesKey 公众平台上，开发者设置的EncodingAESKey
-	 * @param  string $appId 公众平台的 appId
-	 * @param  string $appSecret 公众平台的 app_secret
+	 * @param  string $AES_key 公众平台上，开发者设置的AES_key
 	 *
 	 * @throws WeChatException
 	 */
-	public function __construct($mode, $token, $encodingAesKey, $appId, $appSecret)
+	public function __construct($app_id, $token, $AES_key = null)
 	{
+		$this->app_id = $app_id;
 		$this->token = $token;
-		$this->encodingAesKey = $encodingAesKey;
-		$this->appId = $appId;
-		$this->appSecret = $appSecret;
-		$this->mode = $mode;
+		$this->AES_key = $AES_key;
 
-		if($this->mode == 'safe' && strlen($this->encodingAesKey) != 43) {
+		$this->mode = $AES_key == null ? 'naked' : 'safe';
+
+		if($this->mode == 'safe' && strlen($this->AES_key) != 43) {
             throw new WeChatException('Illegal AES Key', WeChatException::$IllegalAesKey);
 		}
 
-		$this->key = base64_decode($encodingAesKey . "=");
+		$this->key = base64_decode($AES_key . "=");
 	}
 
     /**
@@ -211,7 +235,7 @@ class WeChatService implements WeChatServiceInterface
 		try {
 			//获得16位随机字符串，填充到明文之前
 			$random = str_random(16);
-			$text = $random . pack("N", strlen($text)) . $text . $this->appId;
+			$text = $random . pack("N", strlen($text)) . $text . $this->app_id;
 			// 网络字节序
 			$size = mcrypt_get_block_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
 			$module = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
@@ -260,19 +284,19 @@ class WeChatService implements WeChatServiceInterface
 			//去除补位字符
 			$pkc_encoder = new PKCS7Encoder;
 			$result = $pkc_encoder->decode($decrypted);
-			//去除16位随机字符串,网络字节序和AppId
+			//去除16位随机字符串,网络字节序和app_id
 			if (strlen($result) < 16)
 				return "";
 			$content = substr($result, 16, strlen($result));
 			$len_list = unpack("N", substr($content, 0, 4));
 			$xml_len = $len_list[1];
 			$xml_content = substr($content, 4, $xml_len);
-			$from_appid = substr($content, $xml_len + 4);
+			$from_app_id = substr($content, $xml_len + 4);
 		} catch (Exception $e) {
             throw new WeChatException($e->getMessage(), WeChatException::$IllegalBuffer);
 		}
-		if ($from_appid != $this->appId){
-            throw new WeChatException("Invalid app ID : $from_appid", WeChatException::$ValidateAppidError);
+		if ($from_app_id != $this->app_id){
+            throw new WeChatException("Invalid app ID : $from_app_id", WeChatException::$Validateapp_idError);
         }
 
 		return $xml_content;

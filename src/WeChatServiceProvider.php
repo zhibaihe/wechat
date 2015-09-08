@@ -17,8 +17,8 @@ class WeChatServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->app->singleton('Zhibaihe\WeChat\WeChatServiceInterface', function(){
-            $wechat = new WeChatService(
+        $this->app->singleton('Zhibaihe\WeChat\Server', function(){
+            $wechat = new Server(
                 config('zhibaihe.wechat.mode'),
                 config('zhibaihe.wechat.token'),
                 config('zhibaihe.wechat.AESKey'),
@@ -33,6 +33,6 @@ class WeChatServiceProvider extends ServiceProvider
 
     public function provides()
     {
-        return ['Zhibaihe\WeChat\WeChatServiceInterface'];
+        return ['Zhibaihe\WeChat\Server'];
     }
 }

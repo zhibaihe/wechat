@@ -1,6 +1,6 @@
 <?php
 
-namespace Zhibaihe\WeChat;
+namespace Zhibaihe\WeChat\Utils;
 
 /**
  * 提供基于PKCS7算法的加解密接口.

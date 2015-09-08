@@ -1,7 +1,7 @@
 {
     "name": "zhibaihe/wechat",
     "description": "微信公众平台 PHP SDK (非官方)",
-    "keywords": ["wechat", "sdk", "laravel"],
+    "keywords": ["wechat", "sdk", "zhibaihe"],
     "license": "MIT",
     "authors": [
         {
@@ -15,6 +15,10 @@
         }
     },
     "require": {
+        "illuminate/http": "~5",
         "illuminate/support": "~5"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "~2.7"
     }
 }

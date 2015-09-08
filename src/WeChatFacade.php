@@ -8,6 +8,6 @@ class DemoFacade extends Facade
 {
     protected static function getFacadeAccessor()
     { 
-        return 'Zhibaihe\WeChat\WeChatServiceInterface';
+        return 'Zhibaihe\WeChat\Server';
     }
 }

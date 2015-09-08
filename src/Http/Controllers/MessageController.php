@@ -3,13 +3,13 @@
 namespace Zhibaihe\WeChat\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Zhibaihe\WeChat\WeChatServiceInterface;
+use Zhibaihe\WeChat\Server;
 
 class MessageController extends Controller
 {
 	protected $wechat;
 
-	public function __construct(WeChatServiceInterface $wechat)
+	public function __construct(Server $wechat)
 	{
 		$this->wechat = $wechat;
 	}
