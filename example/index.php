@@ -40,15 +40,15 @@ $token = '3msP9AVToxjVsrHEzaiG';
 
 $server = new Server($app_id, $token);
 
-$server->on('message.text')->reply('message.text')
-    ->with('Msg@handle')
+$server->on('message.text')
+    ->then('Msg@handle')
     ->then('Smiley@handle');
 
-$server->on('event.subscribe')->reply('message.text')
-    ->with('Sub@handle');
+$server->on('event.subscribe')
+    ->then('Sub@handle');
 
-$server->on('message.image')->reply('message.image')
-    ->with(function($message, $reply){
+$server->on('message.image')
+    ->then(function($message, $reply){
         $reply->type = 'image';
         $reply->image = (object) ['MediaId' => $message->media];
     });

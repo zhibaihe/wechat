@@ -48,13 +48,6 @@ class Server
 	 */
 	protected $messageRace;
 
-	/**
-	 * 回复种类
-	 * 格式为：消息大类.消息类型 e.g. message.text, event.subscribe
-	 * @var string 
-	 */
-	protected $replyRace;
-
 	public function __construct($app_id, $token, $AES_key = null)
 	{
 		$this->app_id = $app_id;
@@ -83,31 +76,16 @@ class Server
 		return $this;
 	}
 
-	public function reply($replyRace)
-	{
-		$this->replyRace = $replyRace;
-
-		return $this;
-	}
-
 	/**
 	 * 添加消息处理函数，返回 `$this` 用于方法串接 (method chaining)
 	 *
 	 * @param  callable $callback 回调函数，或者 `class@method` 格式的字符串
 	 */
-	public function with($callback)
+	public function then($callback)
 	{
 		$this->pipeline->attach($this->messageRace, $callback);
 
 		return $this;
-	}
-
-	/**
-	 * Alias of `with`
-	 */
-	public function then($callback)
-	{
-		return $this->with($callback);
 	}
 
 	/**
