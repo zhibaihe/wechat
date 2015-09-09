@@ -44,7 +44,7 @@ class Server
 	/**
 	 * 消息种类
 	 * 格式为：消息大类.消息类型 e.g. message.text, event.subscribe
-	 * @var string 
+	 * @var string
 	 */
 	protected $messageRace;
 
@@ -90,24 +90,23 @@ class Server
 
 	/**
 	 * 启动消息接收服务
-	 * 
+	 *
 	 * @return void
 	 */
-	public function run()
+	public function run($content = null)
 	{
-		$request = Request::capture();
+		extract($this->capture());
 
-		if($request->method() == 'GET')
+		if($method == 'GET')
 		{
-            die($this->echostr($request->get('echostr'),
-                $request->get('signature'),
-                $request->get('timestamp'),
-                $request->get('nonce')
+            die($this->echostr($echostr,
+                $signature,
+                $timestamp,
+                $nonce
             ));
 		}
 
-        extract($request->only('msg_signature', 'timestamp', 'nonce'));
-        $content = $request->getContent();
+        $content = $content != null ?: file_get_contents('php://input');
 
         $message = Factory::create($this->messager->receive($msg_signature, $timestamp, $nonce, $content));
 
@@ -136,5 +135,22 @@ class Server
         }
 
         return $echostr;
+    }
+
+    protected function capture()
+    {
+        $request = [
+            'method' => $_SERVER['REQUEST_METHOD'],
+        ];
+
+        $vars = ['echostr', 'signature', 'msg_signature', 'timestamp', 'nonce'];
+
+        foreach($vars as $var)
+        {
+            $request[$var] = array_key_exists($var, $_GET)
+                ? $_GET[$var] : '';
+        }
+
+        return $request;
     }
 }

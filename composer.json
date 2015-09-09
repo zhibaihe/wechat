@@ -15,10 +15,13 @@
         }
     },
     "require": {
-        "illuminate/http": "~5",
-        "illuminate/support": "~5"
     },
     "require-dev": {
-        "symfony/var-dumper": "~2.7"
+        "symfony/var-dumper": "~2.7",
+        "phpspec/phpspec": "^2.3"
+    },
+    "scripts":{
+        "spec": "phpspec",
+        "test": "phpspec run"
     }
 }

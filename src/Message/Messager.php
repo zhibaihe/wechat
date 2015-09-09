@@ -4,6 +4,7 @@ namespace Zhibaihe\WeChat\Message;
 
 use Exception;
 use Zhibaihe\WeChat\Utils\PKCS7Encoder;
+use Zhibaihe\WeChat\Exceptions\WeChatException;
 
 class Messager
 {
@@ -34,7 +35,7 @@ class Messager
     protected $key;
 
     /**
-     * 消息加解密方式 
+     * 消息加解密方式
 	 * @var string naked | safe
 	 */
     protected $mode;
@@ -223,7 +224,7 @@ class Messager
      * @param array $bundle 待签名数组
      *
      * @return string 签名
-     * 
+     *
      */
 	protected function sign($bundle)
 	{
