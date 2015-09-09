@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the non-official WeChat SDK developed by Zhiyan.
+ *
+ * (c) DUAN Zhiyan <zhiyan@zhibaihe.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Zhibaihe\WeChat;
 
 use Exception;
@@ -24,7 +33,7 @@ class WeChatException extends Exception
     public static $DecodeBase64Error      = -40010;
     public static $GenReturnXmlError      = -40011;
 
-    protected $messages = [
+    protected $messages = array(
         0      => 'OK',
         -40001 => 'Signature validation failed',
         -40002 => 'Parse XML error',
@@ -37,7 +46,7 @@ class WeChatException extends Exception
         -40009 => 'Base64 encoding error',
         -40010 => 'Base64 decoding error',
         -40011 => 'Cannot generate response XML',
-    ];
+    );
 
     public function __construct($message = '', $code = 0, Exception $previous = null)
     {

@@ -1,10 +1,19 @@
 <?php
 
+/*
+ * This file is part of the non-official WeChat SDK developed by Zhiyan.
+ *
+ * (c) DUAN Zhiyan <zhiyan@zhibaihe.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Zhibaihe\WeChat\Message;
 
 class Mutator
 {
-    public static $map = [
+    public static $map = array(
         'ToUserName'       => 'to',
         'FromUserName'     => 'from',
         'CreateTime'       => 'timestamp',
@@ -25,7 +34,7 @@ class Mutator
         'Description'      => 'description',
         'Music'            => 'music',
         'Image'            => 'image',
-    ];
+    );
 
 
     public static function prettify($arr)
@@ -40,7 +49,7 @@ class Mutator
 
     protected static function mutate($arr, $map)
     {
-        $mutated = [];
+        $mutated = array();
 
         foreach ($arr as $k => $v) {
             if (array_key_exists($k, $map)) {

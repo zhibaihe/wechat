@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the non-official WeChat SDK developed by Zhiyan.
+ *
+ * (c) DUAN Zhiyan <zhiyan@zhibaihe.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Zhibaihe\WeChat\Message;
 
 use Illuminate\Http\Request;
@@ -45,7 +54,7 @@ class Server
      * 消息监听器
      * @var array
      */
-    protected $listeners = [];
+    protected $listeners = array();
 
     /**
      * 消息种类
@@ -115,7 +124,7 @@ class Server
     public function tell($callback)
     {
         if (! array_key_exists($this->messageRace, $this->listeners)) {
-            $this->listeners[$this->messageRace] = [];
+            $this->listeners[$this->messageRace] = array();
         }
 
         $this->listeners[$this->messageRace][] = $callback;
@@ -147,7 +156,7 @@ class Server
     {
         extract($this->capture());
 
-        if ($method == 'GET') {
+        if ($method === 'GET') {
             die($this->echostr($echostr,
                 $signature,
                 $timestamp,
@@ -155,7 +164,7 @@ class Server
             ));
         }
 
-        $content = $content != null ?: file_get_contents('php://input');
+        $content = $content !== null ?: file_get_contents('php://input');
 
         $message = Factory::create($this->messager->receive($msg_signature, $timestamp, $nonce, $content));
 
@@ -194,11 +203,11 @@ class Server
      */
     protected function capture()
     {
-        $request = [
+        $request = array(
             'method' => $_SERVER['REQUEST_METHOD'],
-        ];
+        );
 
-        $vars = ['echostr', 'signature', 'msg_signature', 'timestamp', 'nonce'];
+        $vars = array('echostr', 'signature', 'msg_signature', 'timestamp', 'nonce');
 
         foreach ($vars as $var) {
             $request[$var] = array_key_exists($var, $_GET)

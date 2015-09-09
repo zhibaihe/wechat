@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the non-official WeChat SDK developed by Zhiyan.
+ *
+ * (c) DUAN Zhiyan <zhiyan@zhibaihe.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Zhibaihe\WeChat\Message;
 
 use Closure;
@@ -15,7 +24,7 @@ class Pipeline
 {
     protected $lines;
 
-    public function __construct($configuration = [])
+    public function __construct($configuration = array())
     {
         $this->lines = $configuration;
     }
@@ -25,7 +34,7 @@ class Pipeline
         $callable = $this->parseCallable($callable);
 
         if (! array_key_exists($type, $this->lines)) {
-            $this->lines[$type] = [];
+            $this->lines[$type] = array();
         }
 
         $this->lines[$type][] = $callable;
@@ -38,7 +47,7 @@ class Pipeline
         }
 
         $this->lines[$type] = array_filter($this->lines, function ($line) use ($callable) {
-            return $line == $callable;
+            return $line === $callable;
         });
     }
 
@@ -66,7 +75,7 @@ class Pipeline
         }
 
         foreach ($this->lines[$race] as $callback) {
-            call_user_func_array($callback, [$message, $reply]);
+            call_user_func_array($callback, array($message, $reply));
         }
 
         return $reply;

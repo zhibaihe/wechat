@@ -1,10 +1,19 @@
 <?php
 
+/*
+ * This file is part of the non-official WeChat SDK developed by Zhiyan.
+ *
+ * (c) DUAN Zhiyan <zhiyan@zhibaihe.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Zhibaihe\WeChat\Message;
 
 use Exception;
-use Zhibaihe\WeChat\Utils\PKCS7Encoder;
 use Zhibaihe\WeChat\Exceptions\WeChatException;
+use Zhibaihe\WeChat\Utils\PKCS7Encoder;
 
 class Messager
 {
@@ -55,13 +64,13 @@ class Messager
         $this->token = $token;
         $this->AES_key = $AES_key;
 
-        $this->mode = $AES_key == null ? 'naked' : 'safe';
+        $this->mode = $AES_key === null ? 'naked' : 'safe';
 
-        if ($this->mode == 'safe' && strlen($this->AES_key) != 43) {
+        if ($this->mode === 'safe' && strlen($this->AES_key) !== 43) {
             throw new WeChatException('Illegal AES Key', WeChatException::$IllegalAesKey);
         }
 
-        $this->key = base64_decode($AES_key . "=");
+        $this->key = base64_decode($AES_key . "=", true);
     }
 
     /**
@@ -77,9 +86,9 @@ class Messager
      */
     public function validate($signature, $timestamp, $nonce)
     {
-        $sign = $this->sign([$timestamp, $nonce]);
+        $sign = $this->sign(array($timestamp, $nonce));
 
-        return $sign == $signature;
+        return $sign === $signature;
     }
 
     /**
@@ -100,7 +109,7 @@ class Messager
     {
         $replyMsg = $this->array2xml('xml', Mutator::uglify($reply));
 
-        if ($this->mode != 'safe') {
+        if ($this->mode !== 'safe') {
             return $replyMsg;
         }
 
@@ -108,14 +117,14 @@ class Messager
         $encrypt = $this->encrypt($replyMsg);
 
         //生成安全签名
-        $signature = $this->sign([$timestamp, $nonce, $encrypt]);
+        $signature = $this->sign(array($timestamp, $nonce, $encrypt));
 
-        return $this->array2xml('xml', [
+        return $this->array2xml('xml', array(
             'Encrypt' => $encrypt,
             'MsgSignature' => $signature,
             'TimeStamp' => $timestamp,
             'Nonce' => $nonce
-        ]);
+        ));
     }
 
     /**
@@ -138,13 +147,13 @@ class Messager
         //提取密文
         $message = $this->xml2array($postData);
 
-        if ($this->mode != 'safe') {
+        if ($this->mode !== 'safe') {
             return Mutator::prettify($message);
         }
 
-        $signature = $this->sign([$timestamp, $nonce, $message['Encrypt']]);
+        $signature = $this->sign(array($timestamp, $nonce, $message['Encrypt']));
 
-        if ($signature != $msgSignature) {
+        if ($signature !== $msgSignature) {
             throw new WeChatException("Signature ($msgSignature) is invalid. Expected value: ($signature)", WeChatException::$ValidateSignatureError);
         }
 
@@ -222,7 +231,7 @@ class Messager
      */
     protected function sign($bundle)
     {
-        $bundle = array_merge($bundle, [ $this->token ]);
+        $bundle = array_merge($bundle, array( $this->token ));
 
         sort($bundle, SORT_STRING);
 
@@ -273,7 +282,7 @@ class Messager
     {
         try {
             //使用BASE64对需要解密的字符串进行解码
-            $ciphertext_dec = base64_decode($encrypted);
+            $ciphertext_dec = base64_decode($encrypted, true);
             $module = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
             $iv = substr($this->key, 0, 16);
             mcrypt_generic_init($module, $this->key, $iv);
@@ -302,7 +311,7 @@ class Messager
         } catch (Exception $e) {
             throw new WeChatException($e->getMessage(), WeChatException::$IllegalBuffer);
         }
-        if ($from_app_id != $this->app_id) {
+        if ($from_app_id !== $this->app_id) {
             throw new WeChatException("Invalid app ID : $from_app_id", WeChatException::$Validateapp_idError);
         }
 

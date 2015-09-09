@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the non-official WeChat SDK developed by Zhiyan.
+ *
+ * (c) DUAN Zhiyan <zhiyan@zhibaihe.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Zhibaihe\WeChat\Utils;
 
 /**
@@ -21,7 +30,7 @@ class PKCS7Encoder
         $text_length = strlen($text);
         //计算需要填充的位数
         $amount_to_pad = self::$block_size - ($text_length % self::$block_size);
-        if ($amount_to_pad == 0) {
+        if ($amount_to_pad === 0) {
             $amount_to_pad = self::block_size;
         }
         //获得补位所用的字符

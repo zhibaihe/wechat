@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the non-official WeChat SDK developed by Zhiyan.
+ *
+ * (c) DUAN Zhiyan <zhiyan@zhibaihe.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 namespace Zhibaihe\WeChat\Message;
 
 class Message
@@ -10,9 +19,9 @@ class Message
 
     protected $timestamp;
 
-    protected $attributes = [];
+    protected $attributes = array();
 
-    public function __construct($attrs = [])
+    public function __construct($attrs = array())
     {
         foreach ($attrs as $k => $v) {
             if (property_exists($this, $k)) {
@@ -25,11 +34,11 @@ class Message
 
     public function toArray()
     {
-        return array_merge($this->attributes, [
+        return array_merge($this->attributes, array(
             'to' => $this->to,
             'from' => $this->from,
             'timestamp' => $this->timestamp
-        ]);
+        ));
     }
 
     public function fill($attrs)
@@ -41,9 +50,9 @@ class Message
 
     public function race()
     {
-        if (in_array($this->type, ['text', 'image', 'audio', 'video', 'shortvideo', 'link', 'location'])) {
+        if (in_array($this->type, array('text', 'image', 'audio', 'video', 'shortvideo', 'link', 'location'), true)) {
             return "message.$this->type";
-        } elseif ($this->type == 'event') {
+        } elseif ($this->type === 'event') {
             return "event.{$this->event}";
         }
 
