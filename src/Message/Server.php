@@ -41,6 +41,20 @@ class Server
 	 */
 	protected $pipeline;
 
+	/**
+	 * 消息种类
+	 * 格式为：消息大类.消息类型 e.g. message.text, event.subscribe
+	 * @var string 
+	 */
+	protected $messageRace;
+
+	/**
+	 * 回复种类
+	 * 格式为：消息大类.消息类型 e.g. message.text, event.subscribe
+	 * @var string 
+	 */
+	protected $replyRace;
+
 	public function __construct($app_id, $token, $AES_key = null)
 	{
 		$this->app_id = $app_id;
@@ -48,11 +62,52 @@ class Server
 		$this->AES_key = $AES_key;
 
 		$this->messager = new Messager($app_id, $token, $AES_key);
+		$this->pipeline = new Pipeline();
 	}
 
 	public function pipeline(Pipeline $pipeline)
 	{
 		$this->pipeline = $pipeline;
+	}
+
+	/**
+	 * 设置当前消息种类，返回 `$this` 用于方法串接 (method chaining)
+	 *
+	 * @param  string $messageRace 消息种类。格式：大类.具体类型 e.g. message.text, event.subscribe
+	 * @return Zhibaihe\WeChat\Message\Server $this
+	 */
+	public function on($messageRace)
+	{
+		$this->messageRace = $messageRace;
+
+		return $this;
+	}
+
+	public function reply($replyRace)
+	{
+		$this->replyRace = $replyRace;
+
+		return $this;
+	}
+
+	/**
+	 * 添加消息处理函数，返回 `$this` 用于方法串接 (method chaining)
+	 *
+	 * @param  callable $callback 回调函数，或者 `class@method` 格式的字符串
+	 */
+	public function with($callback)
+	{
+		$this->pipeline->attach($this->messageRace, $callback);
+
+		return $this;
+	}
+
+	/**
+	 * Alias of `with`
+	 */
+	public function then($callback)
+	{
+		return $this->with($callback);
 	}
 
 	/**
@@ -73,15 +128,14 @@ class Server
             ));
 		}
 
+        extract($request->only('msg_signature', 'timestamp', 'nonce'));
         $content = $request->getContent();
 
-        extract($request->only('msg_signature', 'timestamp', 'nonce'));
-
-        $message = $this->messager->receive($msg_signature, $timestamp, $nonce, $content);
+        $message = Factory::create($this->messager->receive($msg_signature, $timestamp, $nonce, $content));
 
         $reply = $this->pipeline->process($message);
 
-        $response = $this->messager->prepare($reply, $timestamp, $nonce);
+        $response = $this->messager->prepare($reply->toArray(), $timestamp, $nonce);
 
 		echo $response;
 	}

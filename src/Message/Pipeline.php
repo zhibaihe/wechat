@@ -2,6 +2,10 @@
 
 namespace Zhibaihe\WeChat\Message;
 
+use Closure;
+
+use Zhibaihe\WeChat\Exceptions\InvalidArgumentException;
+
 /**
  * 消息处理流程
  *
@@ -19,6 +23,8 @@ class Pipeline
 
 	public function attach($type, $callable)
 	{
+		$callable = $this->parseCallable($callable);
+
 		if( ! array_key_exists($type, $this->lines))
 		{
 			$this->lines[$type] = [];
@@ -39,29 +45,45 @@ class Pipeline
 
 	public function process($message)
 	{
-		$type = $message['MsgType'];
+		$reply = new Message();
 
-		if(in_array($type, ['text', 'image', 'audio', 'video', 'link', 'location']))
+		$reply->from      = $message->to;
+		$reply->to        = $message->from;
+		$reply->timestamp = time();
+
+		$race = $message->race();
+
+		error_log("Processing: $race");
+
+		if( ! array_key_exists($race, $this->lines))
 		{
-			$type = "message.$type";
+			return $reply;
 		}
-		elseif($type == 'event')
-		{
-			$type = "event.{$message['Event']}";
-		}
 
-		if( ! array_key_exists($type, $this->lines))
-		{
-			return $message;
-		}
+		error_log("Callbacks to be called: ". count($this->lines[$race]));
 
-		$reply = $message;
-
-		foreach($this->lines[$type] as $callback)
+		foreach($this->lines[$race] as $callback)
 		{
-			$reply = call_user_func_array($callback, [$message, $reply]);
+			call_user_func_array($callback, [$message, $reply]);
 		}
 
 		return $reply;
+	}
+
+	protected function parseCallable($callback)
+	{
+		if( is_object($callback) && ($callback instanceof Closure) )
+		{
+			return $callback;
+		}
+
+		$callback = ! is_string($callback) ?: explode('@', $callback);
+
+		if( ! is_callable($callback) )
+		{
+			throw new InvalidArgumentException("Invalid callback {$callback}");
+		}
+
+		return $callback;
 	}
 }

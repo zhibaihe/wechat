@@ -2,7 +2,7 @@
 
 namespace Zhibaihe\WeChat\Contracts;
 
-use Zhibaihe\WeChat\Models\Message;
+use Zhibaihe\WeChat\Message\Message;
 
 interface ResponderContract
 {

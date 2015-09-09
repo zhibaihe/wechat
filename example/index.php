@@ -5,28 +5,34 @@ include(__DIR__ . '/../vendor/autoload.php');
 use Zhibaihe\WeChat\Message\Server;
 use Zhibaihe\WeChat\Message\Pipeline;
 
-$pipeline = new Pipeline();
+class Msg
+{
+    public function handle($message, $reply)
+    {
+        $reply->type = 'text';
+        $reply->content = $message->content . ' via Pipeline';
+    }
+}
 
-$pipeline->attach('message.text', function($message, $reply){
-    $reply = [
-        'ToUserName'   => $message['FromUserName'],
-        'FromUserName' => $message['ToUserName'],
-        'CreateTime'   => time(),
-        'MsgType'      => 'text',
-        'Content'      => $message['Content'] . ' via Pipeline',
-    ];
-	return $reply;
-});
-$pipeline->attach('event.subscribe', function($message, $reply){
-    $reply = [
-        'ToUserName'   => $message['FromUserName'],
-        'FromUserName' => $message['ToUserName'],
-        'CreateTime'   => time(),
-        'MsgType'      => 'text',
-        'Content'      => 'Welcome onboard!'
-    ];
-	return $reply;
-});
+class Smiley
+{
+    public function handle($message, $reply)
+    {
+        $reply->content .= " :)";
+    }
+}
+
+
+class Sub
+{
+    public function handle($message, $reply)
+    {
+        $reply->fill([
+            'type'      => 'text',
+            'content'   => 'Welcome onboard!',
+        ]);
+    }
+}
 
 
 $app_id = 'wx4dd294ec95425923';
@@ -34,6 +40,17 @@ $token = '3msP9AVToxjVsrHEzaiG';
 
 $server = new Server($app_id, $token);
 
-$server->pipeline($pipeline);
+$server->on('message.text')->reply('message.text')
+    ->with('Msg@handle')
+    ->then('Smiley@handle');
+
+$server->on('event.subscribe')->reply('message.text')
+    ->with('Sub@handle');
+
+$server->on('message.image')->reply('message.image')
+    ->with(function($message, $reply){
+        $reply->type = 'image';
+        $reply->image = (object) ['MediaId' => $message->media];
+    });
 
 $server->run();

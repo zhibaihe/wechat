@@ -97,7 +97,7 @@ class Messager
 	 */
 	public function prepare($reply, $timestamp, $nonce)
 	{
-        $replyMsg = $this->array2xml('xml', $reply);
+        $replyMsg = $this->array2xml('xml', Mutator::uglify($reply));
 
         if($this->mode != 'safe')
         {
@@ -140,7 +140,7 @@ class Messager
 
         if($this->mode != 'safe')
         {
-        	return $message;
+        	return Mutator::prettify($message);
         }
 
         $signature = $this->sign([$timestamp, $nonce, $message['Encrypt']]);
@@ -151,7 +151,7 @@ class Messager
 
         $decrypted = $this->decrypt($message['Encrypt']);
 
-        return $this->xml2array($decrypted);
+        return Mutator::prettify($this->xml2array($decrypted));
 	}
 
     /**
@@ -191,7 +191,18 @@ class Messager
                     $xml .= $this->array2xml($value['tag'], $item);
                 }
                 $xml .= "</$key>";
-            }else{
+            }
+            elseif(is_object($value))
+            {
+            	$xml .= "<$key>";
+            	foreach($value as $k => $v)
+            	{
+	                $v = is_numeric($v) ? $v : "<![CDATA[$v]]>";
+	                $xml .= sprintf("<%s>%s</%s>", $k, $v, $k);
+            	}
+            	$xml .= "</$key>";
+            }
+            else{
                 $value = is_numeric($value) ? $value : "<![CDATA[$value]]>";
                 $xml .= sprintf("<%s>%s</%s>", $key, $value, $key);
             }
