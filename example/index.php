@@ -14,15 +14,6 @@ class Msg
     }
 }
 
-class Smiley
-{
-    public function handle($message, $reply)
-    {
-        $reply->content .= " :)";
-    }
-}
-
-
 class Sub
 {
     public function handle($message, $reply)
@@ -34,6 +25,11 @@ class Sub
     }
 }
 
+function log_message($message)
+{
+    error_log(json_encode($message->toArray()));
+}
+
 
 $app_id = 'wx4dd294ec95425923';
 $token = '3msP9AVToxjVsrHEzaiG';
@@ -41,14 +37,16 @@ $token = '3msP9AVToxjVsrHEzaiG';
 $server = new Server($app_id, $token);
 
 $server->on('message.text')
-    ->then('Msg@handle')
-    ->then('Smiley@handle');
+    ->tell('log_message');
+
+$server->on('message.text')
+    ->reply('Msg@handle');
 
 $server->on('event.subscribe')
-    ->then('Sub@handle');
+    ->reply('Sub@handle');
 
 $server->on('message.image')
-    ->then(function($message, $reply){
+    ->reply(function($message, $reply){
         $reply->type = 'image';
         $reply->image = (object) ['MediaId' => $message->media];
     });

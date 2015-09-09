@@ -43,9 +43,17 @@ class Pipeline
 		});
 	}
 
+	public function flush($type)
+	{
+		if( ! array_key_exists($type, $this->lines))
+			return;
+
+		unset($this->lines[$type]);
+	}
+
 	public function process($message)
 	{
-		$reply = new Message();
+		$reply = new Message;
 
 		$reply->from      = $message->to;
 		$reply->to        = $message->from;
@@ -53,14 +61,10 @@ class Pipeline
 
 		$race = $message->race();
 
-		error_log("Processing: $race");
-
 		if( ! array_key_exists($race, $this->lines))
 		{
 			return $reply;
 		}
-
-		error_log("Callbacks to be called: ". count($this->lines[$race]));
 
 		foreach($this->lines[$race] as $callback)
 		{

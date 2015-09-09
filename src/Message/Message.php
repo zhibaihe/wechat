@@ -12,7 +12,7 @@ class Message
 
 	protected $attributes = [];
 
-	public function __construct($attrs)
+	public function __construct($attrs = [])
 	{
 		foreach($attrs as $k => $v)
 		{

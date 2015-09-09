@@ -41,6 +41,12 @@ class Server
 	 */
 	protected $pipeline;
 
+    /**
+     * 消息监听器
+     * @var array
+     */
+    protected $listeners = [];
+
 	/**
 	 * 消息种类
 	 * 格式为：消息大类.消息类型 e.g. message.text, event.subscribe
@@ -88,9 +94,56 @@ class Server
 		return $this;
 	}
 
+    /**
+     * 设置 `$callback` 为该类型消息的唯一处理函数
+     * 若此前该类型消息已有消息处理函数，这些函数将被丢弃
+     *
+     * @param callable $callback 回调函数，或者 `class@method` 格式的字符串
+     */
+    public function reply($callback)
+    {
+        $this->pipeline->flush($this->messageRace);
+        $this->pipeline->attach($this->messageRace, $callback);
+    }
+
+    /**
+     * 将 `$callback` 函数登记为当前类型消息的监听器
+     * 一旦收到此类消息，将通过 `broadcast()` 方法通知之
+     *
+     * @param callable $callback 回调函数，接受一个参数: 收到的消息
+     */
+    public function tell($callback)
+    {
+        if( ! array_key_exists($this->messageRace, $this->listeners))
+        {
+            $this->listeners[$this->messageRace] = [];
+        }
+
+        $this->listeners[$this->messageRace][] = $callback;
+    }
+
+    /**
+     * 将收到的消息逐个通知已经登记的监听器
+     *
+     * @param Message $message 收到的消息
+     */
+    public function broadcast(Message $message)
+    {
+        if(array_key_exists($message->race(), $this->listeners))
+        {
+            foreach($this->listeners[$message->race()] as $callback)
+            {
+                call_user_func($callback, $message);
+            }
+        }
+    }
+
 	/**
 	 * 启动消息接收服务
 	 *
+     * @param string $content 来自微信服务器的 HTTP 请求的 content
+     *                        若留空则自动从 `php://input` 流中读取
+     *
 	 * @return void
 	 */
 	public function run($content = null)
@@ -110,6 +163,7 @@ class Server
 
         $message = Factory::create($this->messager->receive($msg_signature, $timestamp, $nonce, $content));
 
+        $this->broadcast($message);
         $reply = $this->pipeline->process($message);
 
         $response = $this->messager->prepare($reply->toArray(), $timestamp, $nonce);
@@ -119,6 +173,7 @@ class Server
 
 	/**
      * 微信 API endpoint 验证请求
+     *
      * @param $echostr
      * @param $signature
      * @param $timestamp
@@ -137,6 +192,11 @@ class Server
         return $echostr;
     }
 
+    /**
+     * 抓取来自微信服务器的请求中的有用参数
+     *
+     * @return array 消息参数
+     */
     protected function capture()
     {
         $request = [
