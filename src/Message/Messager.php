@@ -60,8 +60,8 @@ class Messager
      */
     public function __construct($app_id, $token, $AES_key = null)
     {
-        $this->app_id = $app_id;
-        $this->token = $token;
+        $this->app_id  = $app_id;
+        $this->token   = $token;
         $this->AES_key = $AES_key;
 
         $this->mode = $AES_key === null ? 'naked' : 'safe';
@@ -172,7 +172,7 @@ class Messager
     protected function xml2array($xmlstring)
     {
         try {
-            $xml = simplexml_load_string($xmlstring, 'SimpleXMLElement', LIBXML_NOCDATA);
+            $xml  = simplexml_load_string($xmlstring, 'SimpleXMLElement', LIBXML_NOCDATA);
             $json = json_encode($xml);
         } catch (Exception $e) {
             throw new WeChatException('ParseXMLError: '. $e->getMessage() . " : ($xmltext)", WeChatException::$ParseXmlError);
@@ -250,14 +250,14 @@ class Messager
         try {
             //获得16位随机字符串，填充到明文之前
             $random = str_random(16);
-            $text = $random . pack("N", strlen($text)) . $text . $this->app_id;
+            $text   = $random . pack("N", strlen($text)) . $text . $this->app_id;
             // 网络字节序
-            $size = mcrypt_get_block_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+            $size   = mcrypt_get_block_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
             $module = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
-            $iv = substr($this->key, 0, 16);
+            $iv     = substr($this->key, 0, 16);
             //使用自定义的填充方式对明文进行补位填充
             $pkc_encoder = new PKCS7Encoder;
-            $text = $pkc_encoder->encode($text);
+            $text        = $pkc_encoder->encode($text);
             mcrypt_generic_init($module, $this->key, $iv);
             //加密
             $encrypted = mcrypt_generic($module, $text);
@@ -283,8 +283,8 @@ class Messager
         try {
             //使用BASE64对需要解密的字符串进行解码
             $ciphertext_dec = base64_decode($encrypted, true);
-            $module = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
-            $iv = substr($this->key, 0, 16);
+            $module         = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', MCRYPT_MODE_CBC, '');
+            $iv             = substr($this->key, 0, 16);
             mcrypt_generic_init($module, $this->key, $iv);
 
             //解密
@@ -298,14 +298,14 @@ class Messager
         try {
             //去除补位字符
             $pkc_encoder = new PKCS7Encoder;
-            $result = $pkc_encoder->decode($decrypted);
+            $result      = $pkc_encoder->decode($decrypted);
             //去除16位随机字符串,网络字节序和app_id
             if (strlen($result) < 16) {
                 return "";
             }
-            $content = substr($result, 16, strlen($result));
-            $len_list = unpack("N", substr($content, 0, 4));
-            $xml_len = $len_list[1];
+            $content     = substr($result, 16, strlen($result));
+            $len_list    = unpack("N", substr($content, 0, 4));
+            $xml_len     = $len_list[1];
             $xml_content = substr($content, 4, $xml_len);
             $from_app_id = substr($content, $xml_len + 4);
         } catch (Exception $e) {

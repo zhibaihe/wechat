@@ -63,8 +63,8 @@ class Server
 
     public function __construct($app_id, $token, $AES_key = null)
     {
-        $this->app_id = $app_id;
-        $this->token = $token;
+        $this->app_id  = $app_id;
+        $this->token   = $token;
         $this->AES_key = $AES_key;
 
         $this->messager = new Messager($app_id, $token, $AES_key);

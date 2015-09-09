@@ -26,7 +26,7 @@ class PKCS7Encoder
      */
     public function encode($text)
     {
-        $block_size = self::$block_size;
+        $block_size  = self::$block_size;
         $text_length = strlen($text);
         //计算需要填充的位数
         $amount_to_pad = self::$block_size - ($text_length % self::$block_size);
@@ -35,7 +35,7 @@ class PKCS7Encoder
         }
         //获得补位所用的字符
         $pad_chr = chr($amount_to_pad);
-        $tmp = "";
+        $tmp     = "";
         for ($index = 0; $index < $amount_to_pad; $index++) {
             $tmp .= $pad_chr;
         }

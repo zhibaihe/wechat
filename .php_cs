@@ -17,6 +17,7 @@ return Symfony\CS\Config\Config::create()
         'header_comment',
         'long_array_syntax',
         'ordered_use',
+        'align_equals',
         'strict',
         'strict_param',
     ))
