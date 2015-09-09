@@ -39,11 +39,11 @@ class WeChatException extends Exception
         -40011 => 'Cannot generate response XML',
     ];
 
-    public function __construct($message = '', $code = 0, Exception $previous = NULL)
+    public function __construct($message = '', $code = 0, Exception $previous = null)
     {
         parent::__construct($message, $code, $previous);
 
-        if(array_key_exists($code, $this->messages)){
+        if (array_key_exists($code, $this->messages)) {
             $this->message .= sprintf("(%d: %s)", $code, $this->messages[$code]);
         }
     }

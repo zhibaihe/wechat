@@ -3,7 +3,6 @@
 namespace Zhibaihe\WeChat\Message;
 
 use Closure;
-
 use Zhibaihe\WeChat\Exceptions\InvalidArgumentException;
 
 /**
@@ -14,80 +13,77 @@ use Zhibaihe\WeChat\Exceptions\InvalidArgumentException;
  */
 class Pipeline
 {
-	protected $lines;
+    protected $lines;
 
-	public function __construct($configuration = [])
-	{
-		$this->lines = $configuration;
-	}
+    public function __construct($configuration = [])
+    {
+        $this->lines = $configuration;
+    }
 
-	public function attach($type, $callable)
-	{
-		$callable = $this->parseCallable($callable);
+    public function attach($type, $callable)
+    {
+        $callable = $this->parseCallable($callable);
 
-		if( ! array_key_exists($type, $this->lines))
-		{
-			$this->lines[$type] = [];
-		}
+        if (! array_key_exists($type, $this->lines)) {
+            $this->lines[$type] = [];
+        }
 
-		$this->lines[$type][] = $callable;
-	}
+        $this->lines[$type][] = $callable;
+    }
 
-	public function detach($type, $callable)
-	{
-		if( ! array_key_exists($type, $this->lines))
-			return;
+    public function detach($type, $callable)
+    {
+        if (! array_key_exists($type, $this->lines)) {
+            return;
+        }
 
-		$this->lines[$type] = array_filter($this->lines, function($line) use ($callable){
-			return $line == $callable;
-		});
-	}
+        $this->lines[$type] = array_filter($this->lines, function ($line) use ($callable) {
+            return $line == $callable;
+        });
+    }
 
-	public function flush($type)
-	{
-		if( ! array_key_exists($type, $this->lines))
-			return;
+    public function flush($type)
+    {
+        if (! array_key_exists($type, $this->lines)) {
+            return;
+        }
 
-		unset($this->lines[$type]);
-	}
+        unset($this->lines[$type]);
+    }
 
-	public function process($message)
-	{
-		$reply = new Message;
+    public function process($message)
+    {
+        $reply = new Message;
 
-		$reply->from      = $message->to;
-		$reply->to        = $message->from;
-		$reply->timestamp = time();
+        $reply->from      = $message->to;
+        $reply->to        = $message->from;
+        $reply->timestamp = time();
 
-		$race = $message->race();
+        $race = $message->race();
 
-		if( ! array_key_exists($race, $this->lines))
-		{
-			return $reply;
-		}
+        if (! array_key_exists($race, $this->lines)) {
+            return $reply;
+        }
 
-		foreach($this->lines[$race] as $callback)
-		{
-			call_user_func_array($callback, [$message, $reply]);
-		}
+        foreach ($this->lines[$race] as $callback) {
+            call_user_func_array($callback, [$message, $reply]);
+        }
 
-		return $reply;
-	}
+        return $reply;
+    }
 
-	protected function parseCallable($callback)
-	{
-		if( is_object($callback) && ($callback instanceof Closure) )
-		{
-			return $callback;
-		}
+    protected function parseCallable($callback)
+    {
+        if (is_object($callback) && ($callback instanceof Closure)) {
+            return $callback;
+        }
 
-		$callback = ! is_string($callback) ?: explode('@', $callback);
+        $callback = ! is_string($callback) ?: explode('@', $callback);
 
-		if( ! is_callable($callback) )
-		{
-			throw new InvalidArgumentException("Invalid callback {$callback}");
-		}
+        if (! is_callable($callback)) {
+            throw new InvalidArgumentException("Invalid callback {$callback}");
+        }
 
-		return $callback;
-	}
+        return $callback;
+    }
 }

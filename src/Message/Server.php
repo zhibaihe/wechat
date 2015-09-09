@@ -9,37 +9,37 @@ use Illuminate\Http\Request;
  */
 class Server
 {
-	/**
-	 * 微信公众号 app_id
-	 * @var string
-	 */
-	protected $app_id;
+    /**
+     * 微信公众号 app_id
+     * @var string
+     */
+    protected $app_id;
 
-	/**
-	 * 微信公众号 token
-	 * @var string
-	 */
-	protected $token;
+    /**
+     * 微信公众号 token
+     * @var string
+     */
+    protected $token;
 
-	/**
-	 * 安全模式下的加密密钥
-	 *
-	 * 可选。若为 `null`，则消息传递模式为明文模式，长度必须为 43 字符
-	 * @var string
-	 */
-	protected $AES_key;
+    /**
+     * 安全模式下的加密密钥
+     *
+     * 可选。若为 `null`，则消息传递模式为明文模式，长度必须为 43 字符
+     * @var string
+     */
+    protected $AES_key;
 
-	/**
-	 * 用于处理消息打包／解包的工具类
-	 * @var Zhibaihe\WeChat\Message\Messager
-	 */
-	protected $messager;
+    /**
+     * 用于处理消息打包／解包的工具类
+     * @var Zhibaihe\WeChat\Message\Messager
+     */
+    protected $messager;
 
-	/**
-	 * 消息处理流水线
-	 * @var Zhibaihe\WeChat\Message\Pipeline
-	 */
-	protected $pipeline;
+    /**
+     * 消息处理流水线
+     * @var Zhibaihe\WeChat\Message\Pipeline
+     */
+    protected $pipeline;
 
     /**
      * 消息监听器
@@ -47,52 +47,52 @@ class Server
      */
     protected $listeners = [];
 
-	/**
-	 * 消息种类
-	 * 格式为：消息大类.消息类型 e.g. message.text, event.subscribe
-	 * @var string
-	 */
-	protected $messageRace;
+    /**
+     * 消息种类
+     * 格式为：消息大类.消息类型 e.g. message.text, event.subscribe
+     * @var string
+     */
+    protected $messageRace;
 
-	public function __construct($app_id, $token, $AES_key = null)
-	{
-		$this->app_id = $app_id;
-		$this->token = $token;
-		$this->AES_key = $AES_key;
+    public function __construct($app_id, $token, $AES_key = null)
+    {
+        $this->app_id = $app_id;
+        $this->token = $token;
+        $this->AES_key = $AES_key;
 
-		$this->messager = new Messager($app_id, $token, $AES_key);
-		$this->pipeline = new Pipeline();
-	}
+        $this->messager = new Messager($app_id, $token, $AES_key);
+        $this->pipeline = new Pipeline();
+    }
 
-	public function pipeline(Pipeline $pipeline)
-	{
-		$this->pipeline = $pipeline;
-	}
+    public function pipeline(Pipeline $pipeline)
+    {
+        $this->pipeline = $pipeline;
+    }
 
-	/**
-	 * 设置当前消息种类，返回 `$this` 用于方法串接 (method chaining)
-	 *
-	 * @param  string $messageRace 消息种类。格式：大类.具体类型 e.g. message.text, event.subscribe
-	 * @return Zhibaihe\WeChat\Message\Server $this
-	 */
-	public function on($messageRace)
-	{
-		$this->messageRace = $messageRace;
+    /**
+     * 设置当前消息种类，返回 `$this` 用于方法串接 (method chaining)
+     *
+     * @param  string $messageRace 消息种类。格式：大类.具体类型 e.g. message.text, event.subscribe
+     * @return Zhibaihe\WeChat\Message\Server $this
+     */
+    public function on($messageRace)
+    {
+        $this->messageRace = $messageRace;
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * 添加消息处理函数，返回 `$this` 用于方法串接 (method chaining)
-	 *
-	 * @param  callable $callback 回调函数，或者 `class@method` 格式的字符串
-	 */
-	public function then($callback)
-	{
-		$this->pipeline->attach($this->messageRace, $callback);
+    /**
+     * 添加消息处理函数，返回 `$this` 用于方法串接 (method chaining)
+     *
+     * @param  callable $callback 回调函数，或者 `class@method` 格式的字符串
+     */
+    public function then($callback)
+    {
+        $this->pipeline->attach($this->messageRace, $callback);
 
-		return $this;
-	}
+        return $this;
+    }
 
     /**
      * 设置 `$callback` 为该类型消息的唯一处理函数
@@ -114,8 +114,7 @@ class Server
      */
     public function tell($callback)
     {
-        if( ! array_key_exists($this->messageRace, $this->listeners))
-        {
+        if (! array_key_exists($this->messageRace, $this->listeners)) {
             $this->listeners[$this->messageRace] = [];
         }
 
@@ -129,35 +128,32 @@ class Server
      */
     public function broadcast(Message $message)
     {
-        if(array_key_exists($message->race(), $this->listeners))
-        {
-            foreach($this->listeners[$message->race()] as $callback)
-            {
+        if (array_key_exists($message->race(), $this->listeners)) {
+            foreach ($this->listeners[$message->race()] as $callback) {
                 call_user_func($callback, $message);
             }
         }
     }
 
-	/**
-	 * 启动消息接收服务
-	 *
+    /**
+     * 启动消息接收服务
+     *
      * @param string $content 来自微信服务器的 HTTP 请求的 content
      *                        若留空则自动从 `php://input` 流中读取
      *
-	 * @return void
-	 */
-	public function run($content = null)
-	{
-		extract($this->capture());
+     * @return void
+     */
+    public function run($content = null)
+    {
+        extract($this->capture());
 
-		if($method == 'GET')
-		{
+        if ($method == 'GET') {
             die($this->echostr($echostr,
                 $signature,
                 $timestamp,
                 $nonce
             ));
-		}
+        }
 
         $content = $content != null ?: file_get_contents('php://input');
 
@@ -168,10 +164,10 @@ class Server
 
         $response = $this->messager->prepare($reply->toArray(), $timestamp, $nonce);
 
-		echo $response;
-	}
+        echo $response;
+    }
 
-	/**
+    /**
      * 微信 API endpoint 验证请求
      *
      * @param $echostr
@@ -184,9 +180,8 @@ class Server
     {
         $valid = $this->messager->validate($signature, $timestamp, $nonce);
 
-        if (!$valid)
-        {
-        	die();
+        if (!$valid) {
+            die();
         }
 
         return $echostr;
@@ -205,8 +200,7 @@ class Server
 
         $vars = ['echostr', 'signature', 'msg_signature', 'timestamp', 'nonce'];
 
-        foreach($vars as $var)
-        {
+        foreach ($vars as $var) {
             $request[$var] = array_key_exists($var, $_GET)
                 ? $_GET[$var] : '';
         }

@@ -46,7 +46,7 @@ $server->on('event.subscribe')
     ->reply('Sub@handle');
 
 $server->on('message.image')
-    ->reply(function($message, $reply){
+    ->reply(function ($message, $reply) {
         $reply->type = 'image';
         $reply->image = (object) ['MediaId' => $message->media];
     });
