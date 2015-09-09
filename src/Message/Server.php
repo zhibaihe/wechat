@@ -11,8 +11,6 @@
 
 namespace Zhibaihe\WeChat\Message;
 
-use Illuminate\Http\Request;
-
 /**
  * 接收来自微信服务器的消息/事件推送并处理之
  */
