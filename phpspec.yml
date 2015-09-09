@@ -1,0 +1,5 @@
+formatter.name: pretty
+suites:
+    wechat_suite:
+        namespace: Zhibaihe\WeChat
+        psr4_prefix: Zhibaihe\WeChat
