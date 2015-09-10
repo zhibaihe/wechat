@@ -38,18 +38,18 @@ class Server
 
     /**
      * 用于处理消息打包／解包的工具类
-     * @var Zhibaihe\WeChat\Message\Messager
+     * @var \Zhibaihe\WeChat\Message\Messager
      */
     protected $messager;
 
     /**
-     * 消息处理流水线
-     * @var Zhibaihe\WeChat\Message\Pipeline
+     * 消息处理器. 每个种类的消息, 仅有一个处理器, 该处理器生成并返回一个回复消息
+     * @var array
      */
-    protected $pipeline;
+    protected $responders = array();
 
     /**
-     * 消息监听器
+     * 消息监听器. 每个种类的消息可有多个监听器, 监听器不生成任何回复
      * @var array
      */
     protected $listeners = array();
@@ -68,35 +68,17 @@ class Server
         $this->AES_key = $AES_key;
 
         $this->messager = new Messager($app_id, $token, $AES_key);
-        $this->pipeline = new Pipeline();
-    }
-
-    public function pipeline(Pipeline $pipeline)
-    {
-        $this->pipeline = $pipeline;
     }
 
     /**
      * 设置当前消息种类，返回 `$this` 用于方法串接 (method chaining)
      *
      * @param  string $messageRace 消息种类。格式：大类.具体类型 e.g. message.text, event.subscribe
-     * @return Zhibaihe\WeChat\Message\Server $this
+     * @return \Zhibaihe\WeChat\Message\Server $this
      */
     public function on($messageRace)
     {
         $this->messageRace = $messageRace;
-
-        return $this;
-    }
-
-    /**
-     * 添加消息处理函数，返回 `$this` 用于方法串接 (method chaining)
-     *
-     * @param  callable $callback 回调函数，或者 `class@method` 格式的字符串
-     */
-    public function then($callback)
-    {
-        $this->pipeline->attach($this->messageRace, $callback);
 
         return $this;
     }
@@ -109,8 +91,9 @@ class Server
      */
     public function reply($callback)
     {
-        $this->pipeline->flush($this->messageRace);
-        $this->pipeline->attach($this->messageRace, $callback);
+        $callback = $this->parseCallable($callback);
+
+        $this->responders[$this->messageRace] = $callback;
     }
 
     /**
@@ -118,6 +101,7 @@ class Server
      * 一旦收到此类消息，将通过 `broadcast()` 方法通知之
      *
      * @param callable $callback 回调函数，接受一个参数: 收到的消息
+     * @return \Zhibaihe\WeChat\Message\Server $this
      */
     public function tell($callback)
     {
@@ -126,6 +110,8 @@ class Server
         }
 
         $this->listeners[$this->messageRace][] = $callback;
+
+        return $this;
     }
 
     /**
@@ -140,6 +126,23 @@ class Server
                 call_user_func($callback, $message);
             }
         }
+    }
+
+    public function respond(Message $message)
+    {
+        if ( ! array_key_exists($message->race(), $this->responders)) {
+            return null;
+        }
+
+        $reply = call_user_func($this->responders[$message->race()], $message);
+
+        $reply->fill([
+            'to' => $message->from,
+            'from' => $message->to,
+            'timestamp' => time(),
+        ]);
+
+        return $reply;
     }
 
     /**
@@ -167,7 +170,11 @@ class Server
         $message = Factory::create($this->messager->receive($msg_signature, $timestamp, $nonce, $content));
 
         $this->broadcast($message);
-        $reply = $this->pipeline->process($message);
+        $reply = $this->respond($message);
+
+        if($reply == null){
+            die();
+        }
 
         $response = $this->messager->prepare($reply->toArray(), $timestamp, $nonce);
 
@@ -213,5 +220,22 @@ class Server
         }
 
         return $request;
+    }
+
+    protected function parseCallable($callback)
+    {
+        if (is_callable($callback)) {
+            return $callback;
+        }
+        elseif (is_string($callback) && strpos($callback, '@') !== false) {
+            $callback = explode('@', $callback);
+        }
+
+        if (! is_callable($callback)) {
+            throw new InvalidArgumentException("Invalid callback {$callback}");
+        }
+
+
+        return $callback;
     }
 }

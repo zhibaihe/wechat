@@ -3,24 +3,26 @@
 include(__DIR__ . '/../vendor/autoload.php');
 
 use Zhibaihe\WeChat\Message\Server;
-use Zhibaihe\WeChat\Message\Pipeline;
+use Zhibaihe\WeChat\Message\Message;
 
 class Msg
 {
-    public function handle($message, $reply)
+    public function handle($message)
     {
-        $reply->type = 'text';
-        $reply->content = $message->content . ' via Pipeline';
+        return new Message([
+            'type' => 'text',
+            'content' => $message->content,
+        ]);
     }
 }
 
 class Sub
 {
-    public function handle($message, $reply)
+    public function handle($message)
     {
-        $reply->fill([
-            'type'      => 'text',
-            'content'   => 'Welcome onboard!',
+        return new Message([
+            'type' => 'text',
+            'content' => 'Welcome onboard!',
         ]);
     }
 }
@@ -46,9 +48,11 @@ $server->on('event.subscribe')
     ->reply('Sub@handle');
 
 $server->on('message.image')
-    ->reply(function ($message, $reply) {
-        $reply->type = 'image';
-        $reply->image = (object) ['MediaId' => $message->media];
+    ->reply(function ($message) {
+        return new Message([
+            'type' => 'image',
+            'image' => (object) ['MediaId' => $message->media],
+        ]);
     });
 
 $server->run();

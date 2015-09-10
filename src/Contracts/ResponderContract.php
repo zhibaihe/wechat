@@ -29,7 +29,7 @@ interface ResponderContract
      * 
      * @return string 消息类型 
      */
-    public function respondeTo();
+    public function respondTo();
 
-    public function responde(Message $message);
+    public function respond(Message $message);
 }
