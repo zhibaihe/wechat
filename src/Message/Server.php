@@ -130,17 +130,17 @@ class Server
 
     public function respond(Message $message)
     {
-        if ( ! array_key_exists($message->race(), $this->responders)) {
+        if (! array_key_exists($message->race(), $this->responders)) {
             return null;
         }
 
         $reply = call_user_func($this->responders[$message->race()], $message);
 
-        $reply->fill([
+        $reply->fill(array(
             'to' => $message->from,
             'from' => $message->to,
             'timestamp' => time(),
-        ]);
+        ));
 
         return $reply;
     }
@@ -172,7 +172,7 @@ class Server
         $this->broadcast($message);
         $reply = $this->respond($message);
 
-        if($reply == null){
+        if ($reply === null) {
             die();
         }
 
@@ -226,8 +226,7 @@ class Server
     {
         if (is_callable($callback)) {
             return $callback;
-        }
-        elseif (is_string($callback) && strpos($callback, '@') !== false) {
+        } elseif (is_string($callback) && strpos($callback, '@') !== false) {
             $callback = explode('@', $callback);
         }
 
