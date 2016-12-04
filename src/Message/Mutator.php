@@ -34,8 +34,13 @@ class Mutator
         'Description'      => 'description',
         'Music'            => 'music',
         'Image'            => 'image',
+        'ArticleCount'     => 'article-count',
+        'Articles'         => 'articles',
     );
 
+    public static $whitelist = array(
+        'tag', 'items'
+    );
 
     public static function prettify($arr)
     {
@@ -52,7 +57,13 @@ class Mutator
         $mutated = array();
 
         foreach ($arr as $k => $v) {
-            if (array_key_exists($k, $map)) {
+            if (in_array($k, self::$whitelist, true)) {
+                $mutated[$k] = is_array($v)
+                    ? array_map(function ($item) use ($map) {
+                        return self::mutate($item, $map);
+                    }, $v)
+                    : $v;
+            } elseif (array_key_exists($k, $map)) {
                 $mutated[ $map[$k] ] = is_array($v) ? self::mutate($v, $map) : $v;
             }
         }
